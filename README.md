@@ -20,7 +20,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/voxmedia/arrow/lib"
+	"github.com/mayowa/arrow"
 )
 
 func main() {
