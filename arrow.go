@@ -6,6 +6,7 @@ See the github project page at http://github.com/bmuller/arrow for more info.
 package arrow
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -212,6 +213,17 @@ func (a Arrow) AddDurations(durations ...string) Arrow {
 		a = a.AddDuration(duration)
 	}
 	return a
+}
+
+// Scan implements the sql.Scanner interface for database deserialization.
+func (a *Arrow) Scan(val interface{}) error {
+	v, ok := val.(time.Time)
+	if !ok {
+		return fmt.Errorf("cant coerce %v to time.Time", val)
+	}
+	a.Time = v
+
+	return nil
 }
 
 func formatConvert(format string) string {
