@@ -6,6 +6,7 @@ See the github project page at http://github.com/bmuller/arrow for more info.
 package arrow
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -14,6 +15,7 @@ import (
 
 type Arrow struct {
 	time.Time
+	FmtString string
 }
 
 // Like time's constants, but with Day and Week
@@ -29,7 +31,7 @@ const (
 )
 
 func New(t time.Time) Arrow {
-	return Arrow{t}
+	return Arrow{t, ""}
 }
 
 func UTC() Arrow {
@@ -224,6 +226,53 @@ func (a *Arrow) Scan(val interface{}) error {
 	a.Time = v
 
 	return nil
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface.
+func (a *Arrow) UnmarshalJSON(data []byte) (err error) {
+	str := strings.TrimSpace(string(data))
+	if len(str) >= len(a.FmtString) {
+		if a.FmtString == "" {
+			a.FmtString = "%Y-%m-%d"
+		}
+		*a, err = CParse(`"`+a.FmtString+`"`, string(data))
+	}
+
+	return
+}
+
+// MarshalText implements the encoding.TextMarshaler interface.
+func (a Arrow) MarshalText() ([]byte, error) {
+	if y := a.Year(); y < 0 || y >= 10000 {
+		return nil, errors.New("Time.MarshalText: year outside of range [0,9999]")
+	}
+
+	return []byte(a.String()), nil
+}
+
+// UnmarshalText implements the encoding.TextUnmarshaler interface.
+func (a *Arrow) UnmarshalText(data []byte) (err error) {
+	str := strings.TrimSpace(string(data))
+	if len(str) >= len(a.FmtString) {
+		if a.FmtString == "" {
+			a.FmtString = "%Y-%m-%d"
+		}
+
+		*a, err = CParse(a.FmtString, str)
+	}
+
+	return
+}
+
+func (a Arrow) String() string {
+	if a.FmtString == "" {
+		a.FmtString = "%Y-%m-%d"
+	}
+	if strings.HasPrefix(a.Time.String(), "0001-01-01") {
+		return ""
+	}
+
+	return a.CFormat(a.FmtString)
 }
 
 func formatConvert(format string) string {
