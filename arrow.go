@@ -6,6 +6,8 @@ See the github project page at http://github.com/bmuller/arrow for more info.
 package arrow
 
 import (
+	"database/sql/driver"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -29,6 +31,8 @@ const (
 	Day                       = 24 * Hour
 	Week                      = 7 * Day
 )
+
+const FmtString string = "%F %T"
 
 func New(t time.Time) Arrow {
 	return Arrow{t, ""}
@@ -217,6 +221,11 @@ func (a Arrow) AddDurations(durations ...string) Arrow {
 	return a
 }
 
+// Value implements the driver.Valuer interface
+func (a Arrow) Value() (driver.Value, error) {
+	return a.Time, nil
+}
+
 // Scan implements the sql.Scanner interface for database deserialization.
 func (a *Arrow) Scan(val interface{}) error {
 	v, ok := val.(time.Time)
@@ -228,17 +237,31 @@ func (a *Arrow) Scan(val interface{}) error {
 	return nil
 }
 
-// UnmarshalJSON implements the json.Unmarshaler interface.
-func (a *Arrow) UnmarshalJSON(data []byte) (err error) {
-	str := strings.TrimSpace(string(data))
-	if len(str) >= len(a.FmtString) {
-		if a.FmtString == "" {
-			a.FmtString = "%Y-%m-%d"
-		}
-		*a, err = CParse(`"`+a.FmtString+`"`, string(data))
+// MarshalJSON implements the json.Marshaler interface.
+func (a Arrow) MarshalJSON() (data []byte, err error) {
+	// str := strings.TrimSpace(string(data))
+	// fmtStr := FmtString
+	// if len(a.FmtString) > 0 {
+	// 	fmtStr = a.FmtString
+	// }
+
+	ret, err := json.Marshal(a.Time)
+	if err != nil {
+		return
 	}
 
-	return
+	return ret, nil
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface.
+func (a *Arrow) UnmarshalJSON(data []byte) (err error) {
+	// fmtStr := FmtString
+	// if len(a.FmtString) > 0 {
+	// 	fmtStr = a.FmtString
+	// }
+	// *a, err = CParse(`"`+fmtStr+`"`, string(data))
+
+	return json.Unmarshal(data, &a.Time)
 }
 
 // MarshalText implements the encoding.TextMarshaler interface.
