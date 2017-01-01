@@ -239,12 +239,6 @@ func (a *Arrow) Scan(val interface{}) error {
 
 // MarshalJSON implements the json.Marshaler interface.
 func (a Arrow) MarshalJSON() (data []byte, err error) {
-	// str := strings.TrimSpace(string(data))
-	// fmtStr := FmtString
-	// if len(a.FmtString) > 0 {
-	// 	fmtStr = a.FmtString
-	// }
-
 	ret, err := json.Marshal(a.Time)
 	if err != nil {
 		return
@@ -255,12 +249,6 @@ func (a Arrow) MarshalJSON() (data []byte, err error) {
 
 // UnmarshalJSON implements the json.Unmarshaler interface.
 func (a *Arrow) UnmarshalJSON(data []byte) (err error) {
-	// fmtStr := FmtString
-	// if len(a.FmtString) > 0 {
-	// 	fmtStr = a.FmtString
-	// }
-	// *a, err = CParse(`"`+fmtStr+`"`, string(data))
-
 	return json.Unmarshal(data, &a.Time)
 }
 
